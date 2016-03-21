@@ -10,27 +10,27 @@ module.exports.validate = function (opts) {
     const _opts = Object.assign({
         failure: 400
     }, opts);
-    return function * (next) {
+    return async function (ctx, next) {
         if (_opts.type && coBody[_opts.type]) {
-            this.request.body = yield coBody[_opts.type](this);
+            ctx.request.body = await coBody[_opts.type](ctx);
         }
         try {
             if (_opts.body) {
-                this.request.body = yield _validate(this.request.body, _opts.body, _opts.options);
+                ctx.request.body = await _validate(ctx.request.body, _opts.body, _opts.options);
             }
             if (_opts.headers) {
-                Object.assign(this.request.headers, yield _validate(this.request.headers, _opts.headers, _opts.options));
+                Object.assign(ctx.request.headers, await _validate(ctx.request.headers, _opts.headers, _opts.options));
             }
             if (_opts.query) {
-                const query = yield _validate(this.request.query, _opts.query, _opts.options);
-                Object.defineProperty(this.request, 'query', { get() { return query } });
+                const query = await _validate(ctx.request.query, _opts.query, _opts.options);
+                Object.defineProperty(ctx.request, 'query', { get() { return query } });
             }
             if (_opts.params) {
-                this.params = yield _validate(this.params, _opts.params, _opts.options);
+                ctx.params = await _validate(ctx.params, _opts.params, _opts.options);
             }
         } catch (e) {
-            this.throw(_opts.failure, e);
+            ctx.throw(_opts.failure, e);
         }
-        yield next;
+        await next();
     };
 };
